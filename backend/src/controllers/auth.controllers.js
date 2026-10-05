@@ -111,7 +111,10 @@ export async function register(req, res) {
     });
   } catch (error) {
     console.error("Registration error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "An account with this email already exists." });
+    }
+    return res.status(500).json({ message: error.message || "Internal server error" });
   }
 }
 
