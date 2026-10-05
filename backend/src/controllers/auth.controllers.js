@@ -17,6 +17,16 @@ import {
 } from "../utils/utils.js";
 import OTP from "../models/otp.model.js";
 
+function getCookieOptions(req) {
+  const isSecure = req.secure || req.headers["x-forwarded-proto"] === "https" || process.env.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    secure: isSecure,
+    sameSite: isSecure ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+}
+
 export async function register(req, res) {
   try {
     const { email, password } = req.body;
@@ -111,12 +121,7 @@ export async function login(req, res) {
     { expiresIn: "15m" }
   );
 
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie("refreshToken", refreshToken, getCookieOptions(req));
 
   if (!user.welcomeEmailSent) {
     user.welcomeEmailSent = true;
@@ -201,12 +206,7 @@ export async function refreshToken(req, res) {
   session.refreshTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
   await session.save();
 
-  res.cookie("refreshToken", newRefreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie("refreshToken", newRefreshToken, getCookieOptions(req));
 
   return res.status(200).json({
     message: "Access token refreshed successfully",
@@ -230,7 +230,7 @@ export async function logout(req, res) {
   session.revoked = true;
   await session.save();
 
-  res.clearCookie("refreshToken");
+  res.clearCookie("refreshToken", getCookieOptions(req));
   return res.status(200).json({ message: "User logged out successfully" });
 }
 
@@ -250,7 +250,7 @@ export async function logoutAll(req, res) {
 
   await Session.updateMany({ user: decoded.id, revoked: false }, { revoked: true });
 
-  res.clearCookie("refreshToken");
+  res.clearCookie("refreshToken", getCookieOptions(req));
   return res.status(200).json({ message: "User logged out from all sessions successfully" });
 }
 

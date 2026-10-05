@@ -7,6 +7,8 @@ import entryRouter from './route/entry.route.js';
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors({
   origin: true,
