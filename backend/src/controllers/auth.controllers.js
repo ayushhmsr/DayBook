@@ -36,13 +36,10 @@ export async function register(req, res) {
       return res.status(400).json({ message: "Name, email, and password are required" });
     }
 
-    const isAlreadyRegistered = await User.findOne({
-      $or: [{ name }, { email }],
-    });
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanName = String(name).trim();
 
-    if (isAlreadyRegistered) {
-      return res.status(409).json({ message: "User already exists" });
-    }
+    const isAlreadyRegistered = await User.findOne({ email: cleanEmail });
 
     const hashedPassword = crypto
       .createHash("sha256")
@@ -50,7 +47,45 @@ export async function register(req, res) {
       .digest("hex");
 
     const profession = req.body.profession || 'trader';
-    const user = await User.create({ name, email, password: hashedPassword, profession });
+
+    if (isAlreadyRegistered) {
+      if (!isAlreadyRegistered.verified) {
+        // User created earlier but unverified - update password & send fresh OTP!
+        isAlreadyRegistered.name = cleanName;
+        isAlreadyRegistered.password = hashedPassword;
+        isAlreadyRegistered.profession = profession;
+        await isAlreadyRegistered.save();
+
+        await OTP.deleteMany({ userId: isAlreadyRegistered._id });
+
+        const otp = generateOtp();
+        const htmlContent = getOtpHtml(otp);
+        const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+        await OTP.create({
+          userId: isAlreadyRegistered._id,
+          email: isAlreadyRegistered.email,
+          otpHash,
+        });
+
+        await sendEmail(isAlreadyRegistered.email, "Verify your email", `Your OTP is: ${otp}`, htmlContent);
+
+        return res.status(200).json({
+          message: "Verification code sent to your email",
+          user: {
+            id: isAlreadyRegistered._id,
+            name: isAlreadyRegistered.name,
+            email: isAlreadyRegistered.email,
+            profession: isAlreadyRegistered.profession,
+            verified: false,
+          },
+        });
+      }
+
+      return res.status(409).json({ message: "User already exists with this email" });
+    }
+
+    const user = await User.create({ name: cleanName, email: cleanEmail, password: hashedPassword, profession });
 
     const otp = generateOtp();
     const htmlContent = getOtpHtml(otp);
@@ -261,9 +296,12 @@ export async function verifyEmail(req, res) {
     return res.status(400).json({ message: "Email and OTP are required" });
   }
 
+  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanOtp = String(otp).trim();
+
   const otpRecord = await OTP.findOne({ 
-    email, 
-    otpHash: crypto.createHash("sha256").update(otp).digest("hex") 
+    email: cleanEmail, 
+    otpHash: crypto.createHash("sha256").update(cleanOtp).digest("hex") 
   });
   
   if (!otpRecord) {
