@@ -19,6 +19,8 @@ const config = {
   googleRefreshToken: process.env.GOOGLE_REFRESH_TOKEN,
   googleUser: process.env.GOOGLE_USER,
   gmailAppPassword: process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS,
+  resendApiKey: process.env.RESEND_API_KEY,
+  resendFrom: process.env.RESEND_FROM || "Daybook <onboarding@resend.dev>",
 };
 
 export default config;
