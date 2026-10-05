@@ -18,8 +18,13 @@ const authConfig = isAppPassword
     };
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: authConfig,
+  tls: {
+    rejectUnauthorized: false,
+  },
 });
 
 export const sendEmail = async (to, subject, text, html) => {
