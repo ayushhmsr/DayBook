@@ -166,6 +166,16 @@ export const translations = {
     'auth.verifiedSuccess': 'Email verified successfully! Logging you in…',
     'auth.backToSignin': 'Back to Sign In',
     'auth.checkInbox': 'Please check your spam/junk folder if you do not see the email.',
+    'auth.forgotPassword': 'Forgot password?',
+    'auth.forgotTitle': 'Reset your password',
+    'auth.forgotSub': 'Enter your registered email address and we will send you a 6-digit recovery code.',
+    'auth.sendResetCode': 'Send Reset Code',
+    'auth.resetPassword': 'Set New Password',
+    'auth.newPassword': 'New Password',
+    'auth.confirmPassword': 'Confirm New Password',
+    'auth.passMismatch': 'Passwords do not match.',
+    'auth.resetSuccess': 'Password reset successfully! You can now sign in with your new password.',
+    'auth.resetOtpSub': 'Enter the 6-digit reset code sent to {email} and your new password.',
 
     // Dashboard
     'dash.welcome': 'Welcome back',
@@ -452,6 +462,16 @@ export const translations = {
     'auth.verifiedSuccess': 'ईमेल सफलतापूर्वक सत्यापित हो गया! लॉग इन किया जा रहा है…',
     'auth.backToSignin': 'लॉग इन पर वापस जाएं',
     'auth.checkInbox': 'यदि आपको ईमेल नहीं मिलता है तो कृपया अपना स्पैम/जंक फ़ोल्डर देखें।',
+    'auth.forgotPassword': 'पासवर्ड भूल गए?',
+    'auth.forgotTitle': 'अपना पासवर्ड रीसेट करें',
+    'auth.forgotSub': 'अपना पंजीकृत ईमेल पता दर्ज करें और हम आपको 6-अंकों का कोड भेजेंगे।',
+    'auth.sendResetCode': 'रीसेट कोड भेजें',
+    'auth.resetPassword': 'नया पासवर्ड सेट करें',
+    'auth.newPassword': 'नया पासवर्ड',
+    'auth.confirmPassword': 'नए पासवर्ड की पुष्टि करें',
+    'auth.passMismatch': 'दोनों पासवर्ड मेल नहीं खाते।',
+    'auth.resetSuccess': 'पासवर्ड सफलतापूर्वक रीसेट हो गया! अब आप अपने नए पासवर्ड से लॉग इन कर सकते हैं।',
+    'auth.resetOtpSub': '{email} पर भेजा गया 6-अंकों का कोड और अपना नया पासवर्ड दर्ज करें।',
 
     // Dashboard
     'dash.welcome': 'वापस स्वागत है',

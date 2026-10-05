@@ -13,14 +13,19 @@ export default function Auth({ initialMode = 'signin' }) {
   const firstRun = useRef(true);
   const { go } = useTransition();
   const { t } = useLanguage();
-  const [mode, setMode] = useState(initialMode); // 'signin' | 'signup' | 'verify_otp'
+  const [mode, setMode] = useState(initialMode); // 'signin' | 'signup' | 'verify_otp' | 'forgot_request' | 'forgot_reset'
   const [form, setForm] = useState({ name: '', email: '', password: '', profession: 'trader' });
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [busy, setBusy] = useState(false);
   const signup = mode === 'signup';
   const isOtp = mode === 'verify_otp';
+  const isForgotRequest = mode === 'forgot_request';
+  const isForgotReset = mode === 'forgot_reset';
+  const isForgot = isForgotRequest || isForgotReset;
 
   useGSAP(
     () => {
@@ -75,6 +80,46 @@ export default function Auth({ initialMode = 'signin' }) {
       return;
     }
 
+    if (isForgotRequest) {
+      if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError(t('auth.invalidEmail'));
+      setBusy(true);
+      try {
+        const res = await api.forgotPassword(form.email);
+        setInfo(res.message || t('auth.resetOtpSub', { email: form.email }));
+        setMode('forgot_reset');
+      } catch (err) {
+        setError(err.message || t('auth.error'));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (isForgotReset) {
+      if (!otp.trim()) return setError(t('auth.otpRequired'));
+      if (newPassword.length < 6) return setError(t('auth.shortPass'));
+      if (newPassword !== confirmPassword) return setError(t('auth.passMismatch'));
+      setBusy(true);
+      try {
+        const res = await api.resetPassword({
+          email: form.email,
+          otp: otp.trim(),
+          newPassword,
+        });
+        setInfo(res.message || t('auth.resetSuccess'));
+        setForm((f) => ({ ...f, password: '' }));
+        setNewPassword('');
+        setConfirmPassword('');
+        setOtp('');
+        setMode('signin');
+      } catch (err) {
+        setError(err.message || t('auth.error'));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError(t('auth.invalidEmail'));
     if (form.password.length < 6) return setError(t('auth.shortPass'));
     setBusy(true);
@@ -114,12 +159,18 @@ export default function Auth({ initialMode = 'signin' }) {
       <main className="auth__panel">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h1 className="display" style={{ margin: 0 }}>
-            {isOtp ? t('auth.otpTitle') : signup ? t('auth.createAccount') : t('auth.welcome')}
+            {isOtp ? t('auth.otpTitle') : isForgot ? t('auth.forgotTitle') : signup ? t('auth.createAccount') : t('auth.welcome')}
           </h1>
           <LanguageToggle />
         </div>
         <p className="auth__sub">
-          {isOtp ? t('auth.otpSub', { email: form.email || 'your email' }) : t('auth.sub')}
+          {isOtp
+            ? t('auth.otpSub', { email: form.email || 'your email' })
+            : isForgotRequest
+            ? t('auth.forgotSub')
+            : isForgotReset
+            ? t('auth.resetOtpSub', { email: form.email || 'your email' })
+            : t('auth.sub')}
         </p>
 
         <form onSubmit={submit} noValidate>
@@ -143,6 +194,56 @@ export default function Auth({ initialMode = 'signin' }) {
                 {t('auth.checkInbox')}
               </p>
             </div>
+          ) : isForgotRequest ? (
+            <div className="field">
+              <label className="field__label" htmlFor="email">
+                {t('auth.email')}
+              </label>
+              <input id="email" type="email" value={form.email} onChange={set('email')} autoFocus autoComplete="email" />
+            </div>
+          ) : isForgotReset ? (
+            <>
+              <div className="field">
+                <label className="field__label" htmlFor="reset-otp">
+                  {t('auth.otpLabel')}
+                </label>
+                <input
+                  id="reset-otp"
+                  type="text"
+                  maxLength={8}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="6-digit code"
+                  autoFocus
+                  autoComplete="one-time-code"
+                  style={{ fontSize: '1.2rem', letterSpacing: '4px', textAlign: 'center', fontWeight: 'bold' }}
+                />
+              </div>
+              <div className="field">
+                <label className="field__label" htmlFor="new-password">
+                  {t('auth.newPassword')}
+                </label>
+                <input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </div>
+              <div className="field">
+                <label className="field__label" htmlFor="confirm-password">
+                  {t('auth.confirmPassword')}
+                </label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </div>
+            </>
           ) : (
             <>
               <div className="auth__signup-fields">
@@ -183,6 +284,22 @@ export default function Auth({ initialMode = 'signin' }) {
                   {t('auth.password')}
                 </label>
                 <input id="password" type="password" value={form.password} onChange={set('password')} autoComplete={signup ? 'new-password' : 'current-password'} />
+                {!signup && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+                    <button
+                      type="button"
+                      className="linkbtn"
+                      style={{ fontSize: '0.82rem', color: 'var(--ink-muted, #777)' }}
+                      onClick={() => {
+                        setError('');
+                        setInfo('');
+                        setMode('forgot_request');
+                      }}
+                    >
+                      {t('auth.forgotPassword')}
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -203,13 +320,17 @@ export default function Auth({ initialMode = 'signin' }) {
               ? t('dash.loading')
               : isOtp
               ? t('auth.verifyOtp')
+              : isForgotRequest
+              ? t('auth.sendResetCode')
+              : isForgotReset
+              ? t('auth.resetPassword')
               : signup
               ? t('auth.signup')
               : t('auth.signin')}
           </button>
         </form>
 
-        {isOtp ? (
+        {isOtp || isForgot ? (
           <p className="auth__switch" style={{ marginTop: '16px' }}>
             <button
               type="button"

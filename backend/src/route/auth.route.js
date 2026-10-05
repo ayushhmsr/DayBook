@@ -19,4 +19,7 @@ authRouter.post("/verify-email", express.json({ type: "*/*" }), authController.v
 
 authRouter.post("/send-reminders", authController.sendDailyStreakReminders);
 
+authRouter.post("/forgot-password", authController.forgotPassword);
+authRouter.post("/reset-password", authController.resetPassword);
+
 export default authRouter;

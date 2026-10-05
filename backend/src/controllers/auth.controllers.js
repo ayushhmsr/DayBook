@@ -5,7 +5,16 @@ import jwt from "jsonwebtoken";
 import config from "../config/config.js";
 import Session from "../models/session.model.js";
 import { sendEmail } from "../services/email.service.js";
-import { generateOtp, getOtpHtml, getWelcomeClubHtml, getWelcomeClubText, getReminderEmailHtml, getReminderEmailText } from "../utils/utils.js";
+import { 
+  generateOtp, 
+  getOtpHtml, 
+  getWelcomeClubHtml, 
+  getWelcomeClubText, 
+  getReminderEmailHtml, 
+  getReminderEmailText,
+  getForgotPasswordOtpHtml,
+  getForgotPasswordOtpText
+} from "../utils/utils.js";
 import OTP from "../models/otp.model.js";
 
 export async function register(req, res) {
@@ -330,5 +339,93 @@ export async function sendDailyStreakReminders(req, res) {
     return res.status(500).json({ message: "Failed to dispatch reminders" });
   }
 }
+
+export async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body || {};
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "No account found with this email address" });
+    }
+
+    // Delete existing OTPs for this user
+    await OTP.deleteMany({ userId: user._id });
+
+    const otp = generateOtp();
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+    await OTP.create({
+      userId: user._id,
+      email: user.email,
+      otpHash,
+    });
+
+    const htmlContent = getForgotPasswordOtpHtml(user.name, otp);
+    const textContent = getForgotPasswordOtpText(user.name, otp);
+
+    await sendEmail(user.email, "🔒 Password Reset Code — Daybook", textContent, htmlContent);
+
+    return res.status(200).json({
+      message: "Password reset OTP sent to your email",
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return res.status(500).json({ message: "Failed to send reset code. Please try again." });
+  }
+}
+
+export async function resetPassword(req, res) {
+  try {
+    const { email, otp, newPassword } = req.body || {};
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "Email, OTP, and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+    const otpRecord = await OTP.findOne({ email, otpHash });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: "Invalid or expired OTP code" });
+    }
+
+    const user = await User.findById(otpRecord.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const hashedPassword = crypto
+      .createHash("sha256")
+      .update(newPassword)
+      .digest("hex");
+
+    user.password = hashedPassword;
+    user.verified = true;
+    await user.save();
+
+    // Invalidate previous sessions for security
+    await Session.updateMany({ user: user._id, revoked: false }, { revoked: true });
+
+    // Delete used OTPs
+    await OTP.deleteMany({ userId: user._id });
+
+    return res.status(200).json({
+      message: "Password reset successfully. You can now log in with your new password.",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return res.status(500).json({ message: "Failed to reset password. Please try again." });
+  }
+}
+
 
 

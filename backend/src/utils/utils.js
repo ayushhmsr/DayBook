@@ -256,6 +256,76 @@ Keep your momentum alive!
 The Daybook Team`;
 }
 
-export { generateOtp, getOtpHtml, getWelcomeClubHtml, getWelcomeClubText, getReminderEmailHtml, getReminderEmailText };
+function getForgotPasswordOtpText(userName = 'User', otp) {
+  return `Hello ${userName},
+
+We received a request to reset the password for your Daybook account.
+
+Your Password Reset Code is: ${otp}
+
+This code is valid for 10 minutes. If you did not request a password reset, you can safely ignore this email.
+
+Best regards,
+The Daybook Team`;
+}
+
+function getForgotPasswordOtpHtml(userName = 'User', otp) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </head>
+      <body style="margin:0;padding:0;background-color:#e9efec;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#10252d;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#e9efec;padding:32px 16px;">
+          <tr>
+            <td align="center">
+              <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border:2px solid #10252d;border-radius:12px;box-shadow:6px 6px 0 #10252d;overflow:hidden;">
+                <tr>
+                  <td style="background-color:#10252d;padding:24px 28px;text-align:center;">
+                    <h2 style="margin:0;color:#ffd84d;font-size:22px;letter-spacing:1px;">DAYBOOK</h2>
+                    <p style="margin:4px 0 0;color:#fafbf9;font-size:13px;opacity:0.85;">Password Recovery</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:32px 28px;text-align:center;">
+                    <h1 style="margin:0 0 12px;font-size:20px;color:#10252d;">Reset Your Password</h1>
+                    <p style="margin:0 0 20px;font-size:15px;color:#4a5f66;line-height:1.5;">
+                      Hello ${userName}, we received a request to reset your Daybook account password. Use the 6-digit code below to set a new password.
+                    </p>
+                    <div style="display:inline-block;padding:14px 32px;background-color:#fafbf9;border:2px dashed #10252d;border-radius:8px;margin:8px 0 24px;">
+                      <span style="font-family:monospace,'Courier New',Courier;font-size:32px;font-weight:800;letter-spacing:8px;color:#10252d;">${otp}</span>
+                    </div>
+                    <p style="margin:0;font-size:13px;color:#8a9a9f;line-height:1.4;">
+                      This code is valid for 10 minutes. If you did not request this, you can safely ignore this email — your account remains secure.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color:#fafbf9;border-top:1px solid #e2e8e5;padding:16px 28px;text-align:center;">
+                    <p style="margin:0;font-size:12px;color:#8a9a9f;">© Daybook. Designed for daily focus.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+}
+
+export { 
+  generateOtp, 
+  getOtpHtml, 
+  getWelcomeClubHtml, 
+  getWelcomeClubText, 
+  getReminderEmailHtml, 
+  getReminderEmailText,
+  getForgotPasswordOtpHtml,
+  getForgotPasswordOtpText
+};
+
 
 

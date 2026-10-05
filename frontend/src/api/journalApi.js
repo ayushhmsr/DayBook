@@ -265,6 +265,30 @@ export const api = {
     return user;
   },
 
+  // Calls Backend POST /api/auth/forgot-password
+  async forgotPassword(email) {
+    const cleanEmail = email.trim().toLowerCase();
+    const data = await apiRequest('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email: cleanEmail }),
+    });
+    return data;
+  },
+
+  // Calls Backend POST /api/auth/reset-password
+  async resetPassword({ email, otp, newPassword }) {
+    const cleanEmail = email.trim().toLowerCase();
+    const data = await apiRequest('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: cleanEmail,
+        otp: otp.trim(),
+        newPassword,
+      }),
+    });
+    return data;
+  },
+
   // Calls Backend GET /api/auth/get-me
   async getMe() {
     try {
