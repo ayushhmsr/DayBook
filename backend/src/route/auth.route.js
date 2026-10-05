@@ -22,4 +22,16 @@ authRouter.post("/send-reminders", authController.sendDailyStreakReminders);
 authRouter.post("/forgot-password", authController.forgotPassword);
 authRouter.post("/reset-password", authController.resetPassword);
 
+authRouter.get("/test-email", async (req, res) => {
+  const { sendEmail } = await import("../services/email.service.js");
+  const config = (await import("../config/config.js")).default;
+  const to = req.query.to || config.googleUser;
+  const result = await sendEmail(to, "Daybook Test Verification", "Testing email delivery from Render.", "<p>Testing email delivery from Render.</p>");
+  if (result.success) {
+    return res.status(200).json({ success: true, message: `Email delivered to ${to}`, messageId: result.messageId });
+  } else {
+    return res.status(500).json({ success: false, error: result.error });
+  }
+});
+
 export default authRouter;
