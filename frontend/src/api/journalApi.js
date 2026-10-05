@@ -96,6 +96,8 @@ const saveUserEntries = (user, list) => {
 
 
 // ── HTTP API Client ─────────────────────────────────────────────────────────
+const API_BASE = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '') : '';
+
 async function apiRequest(endpoint, options = {}) {
   const token = localStorage.getItem(TOKEN_KEY);
   const headers = {
@@ -104,9 +106,11 @@ async function apiRequest(endpoint, options = {}) {
     ...options.headers,
   };
 
+  const targetUrl = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
+
   let res;
   try {
-    res = await fetch(endpoint, {
+    res = await fetch(targetUrl, {
       ...options,
       headers,
       credentials: 'include', // send & receive httpOnly refreshToken cookies
@@ -118,7 +122,8 @@ async function apiRequest(endpoint, options = {}) {
   // Handle automatic 401 token refresh if not already calling refresh
   if (res.status === 401 && !endpoint.includes('/refresh-token') && !endpoint.includes('/login')) {
     try {
-      const refreshRes = await fetch('/api/auth/refresh-token', {
+      const refreshUrl = `${API_BASE}/api/auth/refresh-token`;
+      const refreshRes = await fetch(refreshUrl, {
         method: 'GET',
         credentials: 'include',
       });
