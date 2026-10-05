@@ -38,6 +38,39 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendEmail = async (to, subject, text, html) => {
+  const brevoApiKey = process.env.BREVO_API_KEY || config.brevoApiKey;
+  // If BREVO_API_KEY is provided, send to ANY recipient email worldwide with 0 restrictions
+  if (brevoApiKey) {
+    try {
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": brevoApiKey,
+          accept: "application/json",
+        },
+        body: JSON.stringify({
+          sender: {
+            name: "Daybook",
+            email: config.googleUser || process.env.EMAIL_USER || "ayushhmishra17@gmail.com",
+          },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+          textContent: text,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok && data.messageId) {
+        console.log("Email sent via Brevo HTTPS:", data.messageId);
+        return { success: true, messageId: data.messageId };
+      }
+      console.warn("Brevo API error:", data);
+    } catch (brevoErr) {
+      console.warn("Brevo fetch error:", brevoErr.message);
+    }
+  }
+
   const resendApiKey = process.env.RESEND_API_KEY || config.resendApiKey;
   // If RESEND_API_KEY is configured, prioritize HTTPS API (100% reliable on all cloud hosts)
   if (resendApiKey) {

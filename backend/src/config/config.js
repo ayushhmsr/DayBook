@@ -21,6 +21,7 @@ const config = {
   gmailAppPassword: process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS,
   resendApiKey: process.env.RESEND_API_KEY,
   resendFrom: process.env.RESEND_FROM || "Daybook <onboarding@resend.dev>",
+  brevoApiKey: process.env.BREVO_API_KEY,
 };
 
 export default config;
