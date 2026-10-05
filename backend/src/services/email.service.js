@@ -28,6 +28,9 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   family: 4,
+  connectionTimeout: 4000,
+  greetingTimeout: 4000,
+  socketTimeout: 4000,
   auth: authConfig,
   tls: {
     rejectUnauthorized: false,
@@ -35,14 +38,15 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendEmail = async (to, subject, text, html) => {
+  const resendApiKey = process.env.RESEND_API_KEY || config.resendApiKey;
   // If RESEND_API_KEY is configured, prioritize HTTPS API (100% reliable on all cloud hosts)
-  if (process.env.RESEND_API_KEY) {
+  if (resendApiKey) {
     try {
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          Authorization: `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
           from: process.env.RESEND_FROM || "Daybook <onboarding@resend.dev>",
