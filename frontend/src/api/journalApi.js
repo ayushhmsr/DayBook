@@ -96,7 +96,10 @@ const saveUserEntries = (user, list) => {
 
 
 // ── HTTP API Client ─────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '') : '';
+const PRODUCTION_BACKEND_URL = 'https://daybook-backend-p7be.onrender.com';
+const API_BASE = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+  ? ''
+  : PRODUCTION_BACKEND_URL;
 
 async function apiRequest(endpoint, options = {}) {
   const token = localStorage.getItem(TOKEN_KEY);
