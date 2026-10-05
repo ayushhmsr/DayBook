@@ -10,6 +10,9 @@ const transporter = nodemailer.createTransport({
     clientSecret: config.googleClientSecret,
     refreshToken: config.googleRefreshToken,
   },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
 
 export const sendEmail = async (to, subject, text, html) => {
@@ -23,9 +26,10 @@ export const sendEmail = async (to, subject, text, html) => {
     });
 
     console.log("Message sent: %s", info.messageId);
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending email:", error.message || error);
+    return { success: false, error };
   }
 };
 
